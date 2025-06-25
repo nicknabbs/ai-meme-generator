@@ -52,14 +52,76 @@ exports.handler = async function(event, context) {
     const { text, template, user_id } = JSON.parse(event.body);
     console.log('Request params:', { text, template, user_id });
 
-    // Generate meme text with Claude
-    console.log('Calling Claude API...');
+    // Fetch fresh trending data for context
+    console.log('🔍 Fetching fresh trending data for meme context...');
+    let trendingContext = '';
+    try {
+      const trendingResponse = await fetch('https://bright-creponne-277f92.netlify.app/.netlify/functions/get-trending');
+      const trendingData = await trendingResponse.json();
+      if (trendingData.topics && trendingData.topics.length > 0) {
+        const topTrends = trendingData.topics.slice(0, 3).map(t => t.topic).join(', ');
+        trendingContext = `\n\nCurrent trending topics for context: ${topTrends}`;
+        console.log('✅ Fresh trending context added:', topTrends);
+      }
+    } catch (trendingError) {
+      console.log('⚠️ Could not fetch trending data, proceeding without context');
+    }
+
+    // Generate enhanced meme text with Claude
+    console.log('🤖 Calling Claude API with enhanced prompts...');
+    
+    // Create template-specific instructions
+    const templateInstructions = {
+      drake: 'Create two contrasting statements - first something bad/old/rejected (top), then something good/new/preferred (bottom). Format: "LINE 1: [rejected thing] / LINE 2: [preferred thing]"',
+      distracted: 'Create a scenario where someone is tempted by something new while ignoring their current situation. Format: "BOYFRIEND: [current situation] / GIRLFRIEND: [what\'s being ignored] / DISTRACTION: [new tempting thing]"',
+      brain: 'Create 4 levels of increasingly enlightened thoughts, from basic to galaxy brain. Format: "LEVEL 1: [basic] / LEVEL 2: [smarter] / LEVEL 3: [very smart] / LEVEL 4: [galaxy brain]"',
+      button: 'Create a difficult choice between two options that causes stress. Format: "BUTTON 1: [option 1] / BUTTON 2: [option 2] / SWEATING: [why it\'s a hard choice]"',
+      stonks: 'Create something about gains, profits, or success with intentional misspelling "stonks". Format: "STONKS: [something going up/succeeding]"',
+      woman_yelling: 'Create a misunderstanding or argument scenario. Format: "WOMAN: [angry accusation] / CAT: [confused innocent response]"',
+      this_is_fine: 'Create a situation where everything is falling apart but someone pretends it\'s okay. Format: "SITUATION: [disaster happening] / RESPONSE: This is fine"',
+      galaxy_brain: 'Create increasingly complex or absurd ways to think about something simple. Format like brain but more extreme and cosmic.'
+    };
+
+    const currentTemplate = templateInstructions[template] || 'Create funny meme text appropriate for the format.';
+
+    const enhancedPrompt = `You are an expert meme creator who understands viral internet humor. Create a hilarious, relatable meme for the ${template} format.
+
+MEME FORMAT INSTRUCTIONS:
+${currentTemplate}
+
+USER TOPIC: ${text || 'Use trending topics as inspiration'}
+${trendingContext}
+
+VIRAL MEME CHARACTERISTICS TO INCLUDE:
+- Relatable everyday situations or current events
+- Unexpected twists or ironic observations  
+- Pop culture references or internet culture
+- Self-deprecating humor or universal struggles
+- Absurd but logical progressions
+- Current slang and internet language
+- Situations people can tag their friends in
+
+QUALITY GUIDELINES:
+- Make it genuinely funny, not just random
+- Use contemporary references people will understand
+- Include subtle humor that rewards careful reading
+- Make it shareable and quotable
+- Avoid offensive or controversial content
+- Use conversational, meme-appropriate language
+
+SUCCESSFUL MEME EXAMPLES:
+- Drake: "Studying for finals / Watching Netflix documentaries about serial killers"
+- Distracted boyfriend: "My sleep schedule / 8 hours of sleep / One more episode"  
+- Brain: "Using calculator for 2+2 / Doing math in your head / Using fingers under the desk / Counting in another language to confuse yourself"
+
+Return ONLY the meme text in the specified format, no explanations or additional content.`;
+
     const claudeResponse = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
-      max_tokens: 150,
+      max_tokens: 200,
       messages: [{
         role: 'user',
-        content: `Generate a funny meme text for the ${template} meme format. Topic: ${text || 'something trending'}. Keep it short, punchy, and viral-worthy. Return only the meme text, no explanation.`
+        content: enhancedPrompt
       }]
     });
 

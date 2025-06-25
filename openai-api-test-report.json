@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-06-25T19:24:41.176Z",
+  "configuration": {
+    "apiKey": "sk-proj-LZ...",
+    "organization": "org-2EYm2mphT2Yn21zw5J1DtVJq",
+    "timeout": 30000
+  },
+  "summary": {
+    "passed": 0,
+    "failed": 1,
+    "errors": [
+      {
+        "test": "Authentication & Configuration",
+        "error": "401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************m7IA. You can find your API key at https://platform.openai.com/account/api-keys.",
+        "details": "401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************m7IA. You can find your API key at https://platform.openai.com/account/api-keys."
+      }
+    ]
+  },
+  "authentication": {
+    "test": "Authentication & Configuration",
+    "status": "FAIL",
+    "details": "401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************m7IA. You can find your API key at https://platform.openai.com/account/api-keys.",
+    "error": "401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************m7IA. You can find your API key at https://platform.openai.com/account/api-keys.",
+    "timestamp": "2025-06-25T19:24:41.176Z"
+  },
+  "standardModels": [],
+  "gptImage1": null
+}

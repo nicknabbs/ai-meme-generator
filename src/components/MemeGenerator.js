@@ -13,6 +13,9 @@ function MemeGenerator({ user }) {
   const [generatedMeme, setGeneratedMeme] = useState(null);
   const [trendingTopic, setTrendingTopic] = useState('');
   const [dailyCount, setDailyCount] = useState(0);
+  const [memeMode, setMemeMode] = useState('trending'); // 'trending' or 'custom'
+  const [customDescription, setCustomDescription] = useState('');
+  const [fetchingTrends, setFetchingTrends] = useState(false);
 
   useEffect(() => {
     fetchTrendingTopic();
@@ -52,9 +55,24 @@ function MemeGenerator({ user }) {
     }
 
     setLoading(true);
+    setFetchingTrends(true);
+    
     try {
+      // Fetch fresh trending data on each generation
+      await fetchTrendingTopic();
+      
+      // Determine what text to send based on mode
+      let inputText = '';
+      if (memeMode === 'custom' && customDescription.trim()) {
+        inputText = customDescription.trim();
+      } else if (memeMode === 'trending' && memeText.trim()) {
+        inputText = memeText.trim();
+      } else {
+        inputText = `Make a meme about ${trendingTopic}`;
+      }
+
       const result = await generateMeme({
-        text: memeText || `Make a meme about ${trendingTopic}`,
+        text: inputText,
         template,
         user_id: user?.id
       });
@@ -72,11 +90,19 @@ function MemeGenerator({ user }) {
       toast.error('Failed to generate meme. Please try again.');
     } finally {
       setLoading(false);
+      setFetchingTrends(false);
     }
   };
 
   const handleDownload = () => {
     if (!generatedMeme) return;
+    
+    // Check if user is authenticated
+    if (!user) {
+      toast.error('Sign up to download memes without watermarks!');
+      // Could trigger a signup modal here
+      return;
+    }
     
     const link = document.createElement('a');
     link.href = generatedMeme.image_url;
@@ -119,14 +145,47 @@ function MemeGenerator({ user }) {
         )}
 
         <div className="input-group">
-          <label>Meme Text (or leave blank for AI suggestion)</label>
-          <textarea
-            value={memeText}
-            onChange={(e) => setMemeText(e.target.value)}
-            placeholder={`e.g., "Make a meme about ${trendingTopic}"`}
-            rows={3}
-          />
+          <label>Meme Mode</label>
+          <div className="mode-toggle">
+            <button
+              className={`mode-btn ${memeMode === 'trending' ? 'active' : ''}`}
+              onClick={() => setMemeMode('trending')}
+            >
+              🔥 Trending Topics
+            </button>
+            <button
+              className={`mode-btn ${memeMode === 'custom' ? 'active' : ''}`}
+              onClick={() => setMemeMode('custom')}
+            >
+              ✏️ Custom Description
+            </button>
+          </div>
         </div>
+
+        {memeMode === 'trending' ? (
+          <div className="input-group">
+            <label>Meme Text (or leave blank for AI suggestion)</label>
+            <textarea
+              value={memeText}
+              onChange={(e) => setMemeText(e.target.value)}
+              placeholder={`e.g., "Make a meme about ${trendingTopic}"`}
+              rows={3}
+            />
+          </div>
+        ) : (
+          <div className="input-group">
+            <label>Custom Meme Description</label>
+            <textarea
+              value={customDescription}
+              onChange={(e) => setCustomDescription(e.target.value)}
+              placeholder="Describe your meme idea in detail... e.g., 'A meme about procrastinating on important tasks by organizing your music playlist instead'"
+              rows={4}
+            />
+            <div className="custom-hint">
+              💡 Be specific! The more detail you provide, the funnier and more viral your meme will be.
+            </div>
+          </div>
+        )}
 
         <div className="input-group">
           <label>Template Style</label>
@@ -143,9 +202,12 @@ function MemeGenerator({ user }) {
           </div>
         </div>
 
-        <div className="trending-hint">
-          <FaMagic /> Trending now: <strong>{trendingTopic}</strong>
-        </div>
+        {memeMode === 'trending' && (
+          <div className="trending-hint">
+            <FaMagic /> 
+            {fetchingTrends ? 'Fetching latest trends...' : `Trending now: ${trendingTopic}`}
+          </div>
+        )}
 
         <button 
           className="btn btn-primary generate-btn"
@@ -155,12 +217,12 @@ function MemeGenerator({ user }) {
           {loading ? (
             <>
               <div className="loading" />
-              Generating...
+              {fetchingTrends ? 'Analyzing trends...' : 'Generating meme...'}
             </>
           ) : (
             <>
               <FaMagic />
-              Generate Meme
+              Generate {memeMode === 'custom' ? 'Custom' : 'Trending'} Meme
             </>
           )}
         </button>
@@ -175,8 +237,12 @@ function MemeGenerator({ user }) {
           <img src={generatedMeme.image_url} alt="Generated meme" />
           
           <div className="meme-actions">
-            <button className="btn btn-secondary" onClick={handleDownload}>
-              <FaDownload /> Download
+            <button 
+              className={`btn ${!user ? 'btn-disabled' : 'btn-secondary'}`} 
+              onClick={handleDownload}
+              title={!user ? 'Sign up to download without watermarks' : 'Download meme'}
+            >
+              <FaDownload /> {!user ? 'Sign Up to Download' : 'Download'}
             </button>
             <button className="btn btn-secondary" onClick={handleShare}>
               <FaShare /> Share

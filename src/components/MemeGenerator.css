@@ -50,6 +50,49 @@
   font-family: inherit;
 }
 
+.input-group textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+/* Mode Toggle Styles */
+.mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.mode-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mode-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.mode-btn.active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+  color: #a5b4fc;
+}
+
+.custom-hint {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
 .template-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -98,6 +141,32 @@
   width: 100%;
   border-radius: 12px;
   margin-bottom: 20px;
+  position: relative;
+}
+
+/* Screenshot Protection for Free Users */
+.result-card img {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+.result-card img:hover {
+  filter: brightness(0.9);
+}
+
+/* Disable right-click context menu on images */
+.result-card {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .meme-actions {
@@ -110,14 +179,109 @@
   flex: 1;
 }
 
+.btn-disabled {
+  background: rgba(155, 155, 155, 0.2);
+  color: #999;
+  cursor: not-allowed;
+  border: 1px solid rgba(155, 155, 155, 0.3);
+}
+
+.btn-disabled:hover {
+  transform: none;
+  background: rgba(155, 155, 155, 0.2);
+}
+
 .watermark-notice {
   text-align: center;
   color: #666;
   font-size: 0.9rem;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
 }
 
+/* Loading States */
+.loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
   .meme-generator {
     grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 0 10px;
   }
+  
+  .generator-card, .result-card {
+    padding: 20px;
+  }
+  
+  .mode-toggle {
+    flex-direction: column;
+  }
+  
+  .mode-btn {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .template-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
+  
+  .template-btn {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+  
+  .meme-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Dark theme focus states */
+.input-group textarea:focus,
+.mode-btn:focus,
+.template-btn:focus,
+.btn:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* Accessibility improvements */
+.mode-btn[aria-pressed="true"] {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+.template-btn[aria-pressed="true"] {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+/* Enhanced watermark notice for free users */
+.watermark-notice::before {
+  content: "💎 ";
+  margin-right: 4px;
+}
+
+/* Trending animation */
+.trending-hint {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
