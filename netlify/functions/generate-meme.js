@@ -158,32 +158,40 @@ exports.handler = async function(event, context) {
       console.log('✅ Content sanitized:', memeInputText.substring(0, 100) + '...');
     }
 
-    const enhancedPrompt = `You are an expert at understanding what people really mean when they describe meme ideas. Your job is to interpret their messy thoughts and create clean, simple concepts.
+    const enhancedPrompt = `You are an expert at understanding what people really mean when they describe meme ideas. Your job is to interpret their messy thoughts and create specific, relatable examples.
 
 USER'S RAW IDEA: ${memeInputText}
 ${trendingContext}
 
 YOUR TASK:
 1. UNDERSTAND INTENT - Figure out what the user is really trying to express
-2. CLEAN THE CONCEPT - Remove any confusing or problematic language
-3. CREATE SIMPLE VISUAL - Describe a clear, relatable scenario
-4. MAKE SHAREABLE TEXT - Write punchy text that captures their idea
+2. CREATE SPECIFIC EXAMPLES - If they mention autocorrect, create a specific believable autocorrect fail
+3. KEEP TEXT SHORT - Maximum 8 words for meme text, make it punchy and readable
+4. MAKE IT RELATABLE - Use situations everyone can relate to
 
-INTERPRETATION GUIDELINES:
-- If they mention "inappropriate" content, focus on the situation (like autocorrect fails)
-- If they ramble, extract the core relatable experience
-- If they're unclear, think about common experiences that match their description
-- Always make the concept family-friendly and universal
+AUTOCORRECT SCENARIOS:
+When users mention autocorrect fails, create specific examples like:
+- "Can't wait until six" → "Can't wait until sex"
+- "Good duck" → "Good f*ck" 
+- "That's sick" → "That's d*ck"
+- "We're having tacos" → "We're having sex"
+- "I'll send the shot" → "I'll send the sh*t"
+
+TEXT LENGTH RULES:
+- Maximum 8 words total
+- Use "When autocorrect..." format for autocorrect memes
+- Be specific, not generic
+- Make it immediately funny and relatable
 
 RESPONSE FORMAT:
-Return EXACTLY: "CONCEPT:[simple visual description]|TEXT:[clean, punchy meme text]"
+Return EXACTLY: "CONCEPT:[simple visual description]|TEXT:[max 8 words]"
 
 Examples:
 Input: "autocorrect changed romantic text to something inappropriate"
-Output: "CONCEPT:Person looking shocked at their phone screen after sending a text|TEXT:When autocorrect ruins your romantic text"
+Output: "CONCEPT:Phone screen showing text 'Can't wait until sex' with shocked person's face reflected in screen|TEXT:When autocorrect ruins everything"
 
 Input: "when you realize you've been scrolling too long"
-Output: "CONCEPT:Person checking the time on their phone with a surprised expression|TEXT:Me realizing I've been scrolling for 3 hours"`;
+Output: "CONCEPT:Person checking the time on their phone with surprised expression|TEXT:Me realizing I've been scrolling for hours"`;
 
 const claudeResponse = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
@@ -242,7 +250,7 @@ const claudeResponse = await anthropic.messages.create({
       // Create meme using simple, clean prompt
       const imageRequest = {
         model: "gpt-image-1",
-        prompt: `${visualConcept}. Add text: "${promptText}". Make it a clear, simple meme with readable text.`,
+        prompt: `Create a meme: ${visualConcept}. Add meme text at the top and bottom: "${promptText}". Use large, bold, white text with black outline. Keep text short and readable.`,
         n: 1,
         size: "1024x1024",
         quality: "medium",
