@@ -8,8 +8,6 @@
 
 [functions]
   external_node_modules = ["openai", "@anthropic-ai/sdk"]
-
-[functions."generate-meme"]
   timeout = 600
 
 [[redirects]]
