@@ -74,7 +74,7 @@ exports.handler = async function(event, context) {
       model: "gpt-image-1",
       prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style with clear, readable text.`,
       n: 1,
-      size: "512x512", // Smaller size for faster generation
+      size: "1024x1024", // Square format - only supported size options
       quality: "low", // Use low quality for fastest processing
     });
 
