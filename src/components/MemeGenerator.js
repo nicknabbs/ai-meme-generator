@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { FaDownload, FaShare, FaRedo, FaMagic } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -22,23 +22,23 @@ function MemeGenerator({ user }) {
   const [selectedMood, setSelectedMood] = useState('viral'); // Default mood
   const [isGenerating, setIsGenerating] = useState(false); // Prevent duplicate clicks
 
-  useEffect(() => {
-    // Reset localStorage for testing
-    localStorage.setItem('memeGeneratorCount', '0');
-    localStorage.setItem('memeGeneratorDate', new Date().toDateString());
-    
-    fetchTrendingTopic();
-    checkDailyLimit();
-  }, []);
-
   // Template selection removed - AI automatically chooses optimal template
 
-  const handleMoodChange = async (newMood) => {
-    setSelectedMood(newMood);
-    await fetchTrendingTopic(newMood);
-  };
+  const checkDailyLimit = useCallback(() => {
+    const today = new Date().toDateString();
+    const savedDate = localStorage.getItem('memeGeneratorDate');
+    const savedCount = parseInt(localStorage.getItem('memeGeneratorCount') || '0');
+    
+    if (savedDate === today) {
+      setDailyCount(savedCount);
+    } else {
+      localStorage.setItem('memeGeneratorDate', today);
+      localStorage.setItem('memeGeneratorCount', '0');
+      setDailyCount(0);
+    }
+  }, []);
 
-  const fetchTrendingTopic = async (mood = selectedMood) => {
+  const fetchTrendingTopic = useCallback(async (mood = selectedMood) => {
     setFetchingTrends(true);
     try {
       const response = await fetch(`/.netlify/functions/get-trending?mood=${mood}&forceRefresh=true`);
@@ -52,6 +52,20 @@ function MemeGenerator({ user }) {
     } finally {
       setFetchingTrends(false);
     }
+  }, [selectedMood]);
+
+  useEffect(() => {
+    // Reset localStorage for testing
+    localStorage.setItem('memeGeneratorCount', '0');
+    localStorage.setItem('memeGeneratorDate', new Date().toDateString());
+    
+    fetchTrendingTopic();
+    checkDailyLimit();
+  }, [fetchTrendingTopic, checkDailyLimit]);
+
+  const handleMoodChange = async (newMood) => {
+    setSelectedMood(newMood);
+    await fetchTrendingTopic(newMood);
   };
 
   // Function to handle clicking on a trending topic
@@ -104,20 +118,6 @@ function MemeGenerator({ user }) {
     } finally {
       setLoading(false);
       setIsGenerating(false);
-    }
-  };
-
-  const checkDailyLimit = () => {
-    const today = new Date().toDateString();
-    const savedDate = localStorage.getItem('memeGeneratorDate');
-    const savedCount = parseInt(localStorage.getItem('memeGeneratorCount') || '0');
-    
-    if (savedDate === today) {
-      setDailyCount(savedCount);
-    } else {
-      localStorage.setItem('memeGeneratorDate', today);
-      localStorage.setItem('memeGeneratorCount', '0');
-      setDailyCount(0);
     }
   };
 
