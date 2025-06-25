@@ -160,51 +160,43 @@ exports.handler = async function(event, context) {
       console.log('✅ Content sanitized:', memeInputText.substring(0, 100) + '...');
     }
 
-    const enhancedPrompt = `You are a revolutionary meme creator who creates entirely original, never-seen-before visual concepts. Your mission is to invent a completely fresh meme idea that will go viral.
+    const enhancedPrompt = `You are an expert meme creator who specializes in clear, relatable, and viral content. Your goal is to create a simple but effective visual concept that everyone can understand and relate to.
 
 TOPIC TO TRANSFORM: ${memeInputText}
 ${trendingContext}
 
-REVOLUTIONARY APPROACH:
-Instead of using tired old meme templates (Drake, Two Buttons, etc.), create a COMPLETELY ORIGINAL visual concept that:
+CORE PRINCIPLES:
+1. CLARITY FIRST - The concept must be instantly understandable
+2. PRESERVE USER INTENT - Keep the original meaning and words unless improving clarity
+3. SIMPLE VISUALS - Use clear, relatable scenarios that people experience daily
+4. ACCURATE TEXT - Never change spelling or add unnecessary words
+5. UNIVERSAL APPEAL - Make it shareable across all demographics
 
-1. CAPTURES the essence/humor of this topic with fresh eyes
-2. INVENTS a new visual metaphor or scenario  
-3. CREATES an original composition that's never been done
-4. MAKES people say "I've never seen anything like this!"
-5. GOES VIRAL because it's genuinely innovative
+VISUAL CONCEPT GUIDELINES:
+- Use simple, everyday scenarios people can relate to
+- Focus on clear cause-and-effect situations
+- Avoid overly complex or abstract metaphors
+- Use realistic human interactions and recognizable objects
+- Make the visual directly support the text message
 
-CREATIVE POSSIBILITIES:
-- Original character interactions in unexpected settings
-- Creative object juxtapositions that tell a story
-- Unexpected visual metaphors brought to life
-- Photorealistic scenarios with humorous elements
-- Abstract concepts made tangible and funny
-- Modern art styles with perfect text integration
-- Split-screen comparisons using original imagery
-- Before/after scenarios with creative visuals
-- Anthropomorphized objects in relatable situations
-- Time-based progressions showing evolution/change
+GOOD VISUAL CONCEPT EXAMPLES:
+- Person looking at their phone in bed vs. the time showing 3 AM
+- Someone's face when they realize they've been scrolling for hours
+- Split screen: What I planned to do vs. What I actually did
+- Someone's expression before vs. after checking their bank account
+- A person trying to be productive while their phone keeps buzzing
 
-VISUAL CONCEPT EXAMPLES:
-- A robot trying to understand human emotions through a flowchart
-- Split screen: "My brain during the day" vs "My brain at 3 AM" with original imagery
-- Time traveler from 2030 casually using technology we can't imagine
-- Gravity working differently for different types of problems
-- A GPS that gives life directions instead of driving directions
-- Social media notifications as physical creatures demanding attention
-
-CRITICAL REQUIREMENTS:
-- Text must be SHORT, BOLD, and PERFECTLY READABLE
-- Visual concept must be ENTIRELY ORIGINAL
-- Should feel fresh and innovative, not recycled
-- Must be immediately shareable and quotable
-- Keep family-friendly but genuinely clever
+TEXT ACCURACY REQUIREMENTS:
+- NEVER change the user's original spelling or core message
+- Keep text short, punchy, and exactly as intended
+- Only improve grammar if absolutely necessary for clarity
+- Preserve the user's tone and specific word choices
+- Text must be perfectly spelled and grammatically correct
 
 RESPONSE FORMAT:
-Return EXACTLY: "CONCEPT:[describe the original visual concept in detail]|TEXT:[short, punchy text that goes with the image]"
+Return EXACTLY: "CONCEPT:[describe a simple, clear visual concept in detail]|TEXT:[short, punchy text that preserves user's original intent]"
 
-Example: "CONCEPT:A person's motivation depicted as a battery percentage meter hovering above their head, starting at 100% in the morning and rapidly draining throughout the day|TEXT:Morning: 100% charged / After lunch: 23% remaining"`;
+Example: "CONCEPT:A person holding their phone, looking frustrated as they stare at the volume and power buttons clustered together on the side, with a close-up showing their thumb hovering uncertainly between the buttons|TEXT:When you try to volume up but end up pressing the power button"`;
 
 const claudeResponse = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
@@ -260,10 +252,10 @@ const claudeResponse = await anthropic.messages.create({
         console.log('🛡️ Attempt 3: Using safe generic prompt');
       }
       
-      // Create revolutionary original meme using the visual concept
+      // Create clear, relatable meme using the visual concept
       const imageRequest = {
         model: "gpt-image-1",
-        prompt: `Create an entirely original meme based on this visual concept: "${visualConcept}". Include the text: "${promptText}". CRITICAL REQUIREMENTS: 1) Create a completely ORIGINAL visual composition that has never been seen before, 2) Text must fit completely within image boundaries - NO TEXT CUTOFF, 3) Use large, bold, readable fonts with high contrast, 4) Ensure ALL text is fully visible and properly sized, 5) Make the visual concept come to life with creative, innovative imagery, 6) Avoid any traditional meme templates - this should be 100% original. Family-friendly viral meme style with professional quality.`,
+        prompt: `Create a clear, relatable meme based on this visual concept: "${visualConcept}". Include the text: "${promptText}". CRITICAL REQUIREMENTS: 1) TEXT ACCURACY - Spell every word PERFECTLY with NO spelling errors whatsoever, 2) TEXT POSITIONING - Center all text perfectly with professional typography, 3) VISUAL CLARITY - Create simple, instantly recognizable imagery that matches the concept exactly, 4) REALISTIC ANATOMY - Ensure all humans have correct proportions (2 hands, normal thumbs, realistic faces), 5) HIGH CONTRAST - Use bold, large fonts that are easily readable against the background, 6) SIMPLE COMPOSITION - Avoid cluttered or confusing visual elements, focus on the core concept. The image should be immediately understandable and shareable. Professional meme quality with perfect text rendering.`,
         n: 1,
         size: "1024x1024", // Only supported size for GPT Image 1
         quality: "medium" // Balanced quality and speed for GPT Image 1
