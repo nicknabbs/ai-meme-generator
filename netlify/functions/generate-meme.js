@@ -75,7 +75,7 @@ exports.handler = async function(event, context) {
       prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style with clear, readable text.`,
       n: 1,
       size: "512x512", // Smaller size for faster generation
-      quality: "standard", // Use standard quality for faster processing
+      quality: "low", // Use low quality for fastest processing
     });
 
     const imageUrl = imageResponse.data[0].url;
