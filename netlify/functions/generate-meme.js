@@ -185,6 +185,10 @@ GOOD VISUAL CONCEPT EXAMPLES:
 - Split screen: What I planned to do vs. What I actually did
 - Someone's expression before vs. after checking their bank account
 - A person trying to be productive while their phone keeps buzzing
+- Person typing romantic text, then looking shocked at autocorrected message showing on screen
+- Split screen: intended romantic message vs. what autocorrect actually sent
+- Person's horrified face looking at their phone after sending wrong autocorrected text
+- Close-up of phone screen showing romantic text being autocorrected to something random
 
 TEXT ACCURACY REQUIREMENTS:
 - NEVER change the user's original spelling or core message
@@ -196,7 +200,10 @@ TEXT ACCURACY REQUIREMENTS:
 RESPONSE FORMAT:
 Return EXACTLY: "CONCEPT:[describe a simple, clear visual concept in detail]|TEXT:[short, punchy text that preserves user's original intent]"
 
-Example: "CONCEPT:A person holding their phone, looking frustrated as they stare at the volume and power buttons clustered together on the side, with a close-up showing their thumb hovering uncertainly between the buttons|TEXT:When you try to volume up but end up pressing the power button"`;
+Examples: 
+"CONCEPT:A person holding their phone, looking frustrated as they stare at the volume and power buttons clustered together on the side, with a close-up showing their thumb hovering uncertainly between the buttons|TEXT:When you try to volume up but end up pressing the power button"
+
+"CONCEPT:Split screen showing a person typing on their phone with a romantic expression, then their horrified face as they look at the screen. The phone screen shows a text conversation where they intended to type something romantic but autocorrect changed it to something completely different and embarrassing|TEXT:When you try to send your partner a romantic text, but autocorrect autocorrects it, and it's not romantic anymore"`;
 
 const claudeResponse = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
@@ -255,7 +262,7 @@ const claudeResponse = await anthropic.messages.create({
       // Create clear, relatable meme using the visual concept
       const imageRequest = {
         model: "gpt-image-1",
-        prompt: `Create a clear, relatable meme based on this visual concept: "${visualConcept}". Include the text: "${promptText}". CRITICAL REQUIREMENTS: 1) TEXT ACCURACY - Spell every word PERFECTLY with NO spelling errors whatsoever, 2) TEXT POSITIONING - Center all text perfectly with professional typography, 3) VISUAL CLARITY - Create simple, instantly recognizable imagery that matches the concept exactly, 4) REALISTIC ANATOMY - Ensure all humans have correct proportions (2 hands, normal thumbs, realistic faces), 5) HIGH CONTRAST - Use bold, large fonts that are easily readable against the background, 6) SIMPLE COMPOSITION - Avoid cluttered or confusing visual elements, focus on the core concept. The image should be immediately understandable and shareable. Professional meme quality with perfect text rendering.`,
+        prompt: `Create a clear, relatable meme that EXACTLY matches this visual concept: "${visualConcept}". Include the text: "${promptText}". CRITICAL REQUIREMENTS: 1) CONCEPT ADHERENCE - The image must EXACTLY match the described concept with no deviations or random elements, 2) TEXT ACCURACY - Spell every word PERFECTLY with NO spelling errors whatsoever, 3) TEXT POSITIONING - Center all text perfectly with professional typography and high visibility, 4) VISUAL CLARITY - Create simple, instantly recognizable imagery that directly represents the concept, 5) REALISTIC ANATOMY - Ensure all humans have correct proportions (2 hands, normal thumbs, realistic faces), 6) RELEVANT CONTENT - Every element in the image must directly relate to the concept, no random or unrelated objects, 7) HIGH CONTRAST - Use bold, large fonts that are easily readable against the background. The image must tell the exact story described in the concept. Professional meme quality with perfect concept execution.`,
         n: 1,
         size: "1024x1024", // Only supported size for GPT Image 1
         quality: "medium" // Balanced quality and speed for GPT Image 1
