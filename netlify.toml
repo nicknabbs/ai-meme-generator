@@ -6,6 +6,12 @@
 [build.environment]
   NODE_VERSION = "20.18.1"
 
+[functions]
+  external_node_modules = ["openai", "@anthropic-ai/sdk"]
+
+[functions."generate-meme"]
+  timeout = 600
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"

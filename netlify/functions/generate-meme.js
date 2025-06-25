@@ -41,6 +41,7 @@ exports.handler = async function(event, context) {
 
   const openai = new OpenAI({
     apiKey: openaiApiKey,
+    timeout: 580000, // 9 minutes 40 seconds (slightly less than function timeout)
   });
 
   try {
@@ -62,7 +63,8 @@ exports.handler = async function(event, context) {
     console.log('Claude response:', memeText);
 
     // Generate image with GPT Image 1
-    console.log('Calling OpenAI API...');
+    console.log('Calling OpenAI API with GPT Image 1 model...');
+    console.log('Note: GPT Image 1 may take several minutes to generate high-quality memes');
     const imageResponse = await openai.images.generate({
       model: "gpt-image-1",
       prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style with clear, readable text.`,
