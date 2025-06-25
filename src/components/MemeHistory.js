@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { FaEye, FaShare, FaDownload } from 'react-icons/fa';
@@ -9,15 +9,7 @@ function MemeHistory({ user }) {
   const [memes, setMemes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      fetchMemes();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchMemes = async () => {
+  const fetchMemes = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('memes')
@@ -32,7 +24,15 @@ function MemeHistory({ user }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchMemes();
+    } else {
+      setLoading(false);
+    }
+  }, [user, fetchMemes]);
 
   if (!user) {
     return (

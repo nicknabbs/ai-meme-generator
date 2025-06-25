@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaDownload, FaShare, FaRedo, FaMagic } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { generateMeme, saveMeme } from '../services/api';
+import { generateMeme } from '../services/api';
 import { MEME_TEMPLATES } from '../utils/constants';
 import './MemeGenerator.css';
 
