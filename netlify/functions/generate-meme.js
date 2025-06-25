@@ -133,7 +133,7 @@ exports.handler = async function(event, context) {
     // Enhanced URL extraction with comprehensive method coverage
     let imageUrl = null;
     
-    // Method 1: Standard DALL-E format (data[0].url) - highest priority
+    // Method 1: Standard GPT Image 1 format (data[0].url) - highest priority
     if (imageResponse.data?.[0]?.url && typeof imageResponse.data[0].url === 'string') {
       imageUrl = imageResponse.data[0].url;
       console.log('✅ Found URL using method 1: data[0].url -', imageUrl.substring(0, 100) + '...');

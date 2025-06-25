@@ -1,7 +1,7 @@
 # AI Meme Generator - Complete Project Structure
 
 ## Project Overview
-This is a complete, production-ready AI meme generator that uses Claude API for text and DALL-E 3 for images. Copy each file into your project directory.
+This is a complete, production-ready AI meme generator that uses Claude API for text and GPT Image 1 for images. Copy each file into your project directory.
 
 ## Directory Structure
 ```
@@ -115,7 +115,7 @@ REACT_APP_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key_here
 ```markdown
 # AI Meme Generator 🚀
 
-Generate viral memes using Claude AI for text and DALL-E 3 for images!
+Generate viral memes using Claude AI for text and GPT Image 1 for images!
 
 ## Setup Instructions
 
@@ -1629,15 +1629,15 @@ export async function handler(event, context) {
 
     const memeText = claudeResponse.content[0].text;
 
-    // Generate image with DALL-E 3
-    const imageResponse = await openai.createImage({
-      model: "dall-e-3",
+    // Generate image with GPT Image 1
+    const imageResponse = await openai.images.generate({
+      model: "gpt-image-1",
       prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style.`,
       n: 1,
       size: "1024x1024",
     });
 
-    const imageUrl = imageResponse.data.data[0].url;
+    const imageUrl = imageResponse.data[0].url;
 
     // Add watermark for free users
     const finalImageUrl = !user_id ? addWatermark(imageUrl) : imageUrl;
