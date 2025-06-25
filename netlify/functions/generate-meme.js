@@ -42,11 +42,9 @@ function sanitizeContent(text) {
 function detectSensitiveContent(text) {
   if (!text) return false;
   
+  // Much more focused detection - only truly harmful content
   const sensitiveKeywords = [
-    'trump', 'biden', 'harris', 'political', 'election', 'vote', 'democrat', 'republican',
-    'gop', 'congress', 'senate', 'war', 'violence', 'terrorism', 'nazi', 'hitler',
-    'racism', 'sexism', 'discrimination', 'hate', 'suicide', 'murder', 'death',
-    'drugs', 'illegal', 'criminal', 'controversy', 'scandal'
+    'nazi', 'hitler', 'terrorism', 'suicide', 'murder', 'hate crime'
   ];
   
   const lowerText = text.toLowerCase();
@@ -123,7 +121,7 @@ exports.handler = async function(event, context) {
     const { text, user_id, skipTrendingFetch } = JSON.parse(event.body);
     console.log('Request params:', { text, user_id, skipTrendingFetch });
 
-    // Content moderation check
+    // Light content check - only for truly harmful content
     const inputText = text || '';
     const isSensitive = detectSensitiveContent(inputText);
     console.log('Content sensitivity check:', { isSensitive, originalLength: inputText.length });
@@ -160,50 +158,32 @@ exports.handler = async function(event, context) {
       console.log('✅ Content sanitized:', memeInputText.substring(0, 100) + '...');
     }
 
-    const enhancedPrompt = `You are an expert meme creator who specializes in clear, relatable, and viral content. Your goal is to create a simple but effective visual concept that everyone can understand and relate to.
+    const enhancedPrompt = `You are an expert at understanding what people really mean when they describe meme ideas. Your job is to interpret their messy thoughts and create clean, simple concepts.
 
-TOPIC TO TRANSFORM: ${memeInputText}
+USER'S RAW IDEA: ${memeInputText}
 ${trendingContext}
 
-CORE PRINCIPLES:
-1. CLARITY FIRST - The concept must be instantly understandable
-2. PRESERVE USER INTENT - Keep the original meaning and words unless improving clarity
-3. SIMPLE VISUALS - Use clear, relatable scenarios that people experience daily
-4. ACCURATE TEXT - Never change spelling or add unnecessary words
-5. UNIVERSAL APPEAL - Make it shareable across all demographics
+YOUR TASK:
+1. UNDERSTAND INTENT - Figure out what the user is really trying to express
+2. CLEAN THE CONCEPT - Remove any confusing or problematic language
+3. CREATE SIMPLE VISUAL - Describe a clear, relatable scenario
+4. MAKE SHAREABLE TEXT - Write punchy text that captures their idea
 
-VISUAL CONCEPT GUIDELINES:
-- Use simple, everyday scenarios people can relate to
-- Focus on clear cause-and-effect situations
-- Avoid overly complex or abstract metaphors
-- Use realistic human interactions and recognizable objects
-- Make the visual directly support the text message
-
-GOOD VISUAL CONCEPT EXAMPLES:
-- Person looking at their phone in bed vs. the time showing 3 AM
-- Someone's face when they realize they've been scrolling for hours
-- Split screen: What I planned to do vs. What I actually did
-- Someone's expression before vs. after checking their bank account
-- A person trying to be productive while their phone keeps buzzing
-- Person typing romantic text, then looking shocked at autocorrected message showing on screen
-- Split screen: intended romantic message vs. what autocorrect actually sent
-- Person's horrified face looking at their phone after sending wrong autocorrected text
-- Close-up of phone screen showing romantic text being autocorrected to something random
-
-TEXT ACCURACY REQUIREMENTS:
-- NEVER change the user's original spelling or core message
-- Keep text short, punchy, and exactly as intended
-- Only improve grammar if absolutely necessary for clarity
-- Preserve the user's tone and specific word choices
-- Text must be perfectly spelled and grammatically correct
+INTERPRETATION GUIDELINES:
+- If they mention "inappropriate" content, focus on the situation (like autocorrect fails)
+- If they ramble, extract the core relatable experience
+- If they're unclear, think about common experiences that match their description
+- Always make the concept family-friendly and universal
 
 RESPONSE FORMAT:
-Return EXACTLY: "CONCEPT:[describe a simple, clear visual concept in detail]|TEXT:[short, punchy text that preserves user's original intent]"
+Return EXACTLY: "CONCEPT:[simple visual description]|TEXT:[clean, punchy meme text]"
 
-Examples: 
-"CONCEPT:A person holding their phone, looking frustrated as they stare at the volume and power buttons clustered together on the side, with a close-up showing their thumb hovering uncertainly between the buttons|TEXT:When you try to volume up but end up pressing the power button"
+Examples:
+Input: "autocorrect changed romantic text to something inappropriate"
+Output: "CONCEPT:Person looking shocked at their phone screen after sending a text|TEXT:When autocorrect ruins your romantic text"
 
-"CONCEPT:Split screen showing a person typing on their phone with a romantic expression, then their horrified face as they look at the screen. The phone screen shows a text conversation where they intended to type something romantic but autocorrect changed it to something completely different and embarrassing|TEXT:When you try to send your partner a romantic text, but autocorrect autocorrects it, and it's not romantic anymore"`;
+Input: "when you realize you've been scrolling too long"
+Output: "CONCEPT:Person checking the time on their phone with a surprised expression|TEXT:Me realizing I've been scrolling for 3 hours"`;
 
 const claudeResponse = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
@@ -259,13 +239,14 @@ const claudeResponse = await anthropic.messages.create({
         console.log('🛡️ Attempt 3: Using safe generic prompt');
       }
       
-      // Create clear, relatable meme using the visual concept
+      // Create meme using simple, clean prompt
       const imageRequest = {
         model: "gpt-image-1",
-        prompt: `Create a clear, relatable meme that EXACTLY matches this visual concept: "${visualConcept}". Include the text: "${promptText}". CRITICAL REQUIREMENTS: 1) CONCEPT ADHERENCE - The image must EXACTLY match the described concept with no deviations or random elements, 2) TEXT ACCURACY - Spell every word PERFECTLY with NO spelling errors whatsoever, 3) TEXT POSITIONING - Center all text perfectly with professional typography and high visibility, 4) VISUAL CLARITY - Create simple, instantly recognizable imagery that directly represents the concept, 5) REALISTIC ANATOMY - Ensure all humans have correct proportions (2 hands, normal thumbs, realistic faces), 6) RELEVANT CONTENT - Every element in the image must directly relate to the concept, no random or unrelated objects, 7) HIGH CONTRAST - Use bold, large fonts that are easily readable against the background. The image must tell the exact story described in the concept. Professional meme quality with perfect concept execution.`,
+        prompt: `${visualConcept}. Add text: "${promptText}". Make it a clear, simple meme with readable text.`,
         n: 1,
-        size: "1024x1024", // Only supported size for GPT Image 1
-        quality: "medium" // Balanced quality and speed for GPT Image 1
+        size: "1024x1024",
+        quality: "medium",
+        moderation: "low"
       };
       
       console.log('Image generation request:', JSON.stringify(imageRequest, null, 2));
