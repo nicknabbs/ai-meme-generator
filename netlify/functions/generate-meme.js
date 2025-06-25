@@ -120,100 +120,117 @@ exports.handler = async function(event, context) {
   });
 
   try {
-    const { text, template, user_id } = JSON.parse(event.body);
-    console.log('Request params:', { text, template, user_id });
+    const { text, user_id, skipTrendingFetch } = JSON.parse(event.body);
+    console.log('Request params:', { text, user_id, skipTrendingFetch });
 
     // Content moderation check
     const inputText = text || '';
     const isSensitive = detectSensitiveContent(inputText);
     console.log('Content sensitivity check:', { isSensitive, originalLength: inputText.length });
 
-    // Fetch fresh trending data for context
-    console.log('🔍 Fetching fresh trending data for meme context...');
+    // Fetch fresh trending data for context (only if not skipped)
     let trendingContext = '';
-    try {
-      const trendingResponse = await fetch('https://bright-creponne-277f92.netlify.app/.netlify/functions/get-trending');
-      const trendingData = await trendingResponse.json();
-      if (trendingData.topics && trendingData.topics.length > 0) {
-        const topTrends = trendingData.topics.slice(0, 3).map(t => t.topic).join(', ');
-        trendingContext = `\n\nCurrent trending topics for context: ${topTrends}`;
-        console.log('✅ Fresh trending context added:', topTrends);
+    if (!skipTrendingFetch) {
+      console.log('🔍 Fetching fresh trending data for meme context...');
+      try {
+        const trendingResponse = await fetch('https://bright-creponne-277f92.netlify.app/.netlify/functions/get-trending');
+        const trendingData = await trendingResponse.json();
+        if (trendingData.topics && trendingData.topics.length > 0) {
+          const topTrends = trendingData.topics.slice(0, 3).map(t => t.topic).join(', ');
+          trendingContext = `\n\nCurrent trending topics for context: ${topTrends}`;
+          console.log('✅ Fresh trending context added:', topTrends);
+        }
+      } catch (trendingError) {
+        console.log('⚠️ Could not fetch trending data, proceeding without context');
       }
-    } catch (trendingError) {
-      console.log('⚠️ Could not fetch trending data, proceeding without context');
+    } else {
+      console.log('⚡ Skipping trending data fetch - using provided topic directly');
     }
 
-    // Generate enhanced meme text with Claude
-    console.log('🤖 Calling Claude API with enhanced prompts...');
+    // Generate enhanced meme with auto template selection
+    console.log('🤖 Calling Claude API with auto-template selection...');
     
-    // Create template-specific instructions
-    const templateInstructions = {
-      drake: 'Create two contrasting statements - first something bad/old/rejected (top), then something good/new/preferred (bottom). Format: "LINE 1: [rejected thing] / LINE 2: [preferred thing]"',
-      distracted: 'Create a scenario where someone is tempted by something new while ignoring their current situation. Format: "BOYFRIEND: [current situation] / GIRLFRIEND: [what\'s being ignored] / DISTRACTION: [new tempting thing]"',
-      brain: 'Create 4 levels of increasingly enlightened thoughts, from basic to galaxy brain. Format: "LEVEL 1: [basic] / LEVEL 2: [smarter] / LEVEL 3: [very smart] / LEVEL 4: [galaxy brain]"',
-      button: 'Create a difficult choice between two options that causes stress. Format: "BUTTON 1: [option 1] / BUTTON 2: [option 2] / SWEATING: [why it\'s a hard choice]"',
-      stonks: 'Create something about gains, profits, or success with intentional misspelling "stonks". Format: "STONKS: [something going up/succeeding]"',
-      woman_yelling: 'Create a misunderstanding or argument scenario. Format: "WOMAN: [angry accusation] / CAT: [confused innocent response]"',
-      this_is_fine: 'Create a situation where everything is falling apart but someone pretends it\'s okay. Format: "SITUATION: [disaster happening] / RESPONSE: This is fine"',
-      galaxy_brain: 'Create increasingly complex or absurd ways to think about something simple. Format like brain but more extreme and cosmic.'
-    };
-
-    const currentTemplate = templateInstructions[template] || 'Create funny meme text appropriate for the format.';
-
     // Determine the topic to use for meme generation
     let memeInputText = text || 'Use trending topics as inspiration';
     
     // If sensitive content detected, sanitize or create safe alternative
     if (isSensitive) {
       console.log('⚠️ Sensitive content detected, sanitizing...');
-      memeInputText = sanitizeContent(inputText) || createSafePrompt(inputText, template);
+      memeInputText = sanitizeContent(inputText) || createSafePrompt(inputText, 'auto');
       console.log('✅ Content sanitized:', memeInputText.substring(0, 100) + '...');
     }
 
-    const enhancedPrompt = `You are an expert meme creator who understands viral internet humor. Create a hilarious, relatable meme for the ${template} format.
+    const enhancedPrompt = `You are a revolutionary meme creator who creates entirely original, never-seen-before visual concepts. Your mission is to invent a completely fresh meme idea that will go viral.
 
-MEME FORMAT INSTRUCTIONS:
-${currentTemplate}
-
-USER TOPIC: ${memeInputText}
+TOPIC TO TRANSFORM: ${memeInputText}
 ${trendingContext}
 
-VIRAL MEME CHARACTERISTICS TO INCLUDE:
-- Relatable everyday situations or current events
-- Unexpected twists or ironic observations  
-- Pop culture references or internet culture
-- Self-deprecating humor or universal struggles
-- Absurd but logical progressions
-- Current slang and internet language
-- Situations people can tag their friends in
+REVOLUTIONARY APPROACH:
+Instead of using tired old meme templates (Drake, Two Buttons, etc.), create a COMPLETELY ORIGINAL visual concept that:
 
-QUALITY GUIDELINES:
-- Make it genuinely funny, not just random
-- Use contemporary references people will understand
-- Include subtle humor that rewards careful reading
-- Make it shareable and quotable
-- Avoid ALL political figures, controversial topics, and sensitive content
-- Use conversational, meme-appropriate language
-- Keep content family-friendly and non-offensive
+1. CAPTURES the essence/humor of this topic with fresh eyes
+2. INVENTS a new visual metaphor or scenario  
+3. CREATES an original composition that's never been done
+4. MAKES people say "I've never seen anything like this!"
+5. GOES VIRAL because it's genuinely innovative
 
-SUCCESSFUL MEME EXAMPLES:
-- Drake: "Studying for finals / Watching Netflix documentaries about serial killers"
-- Distracted boyfriend: "My sleep schedule / 8 hours of sleep / One more episode"  
-- Brain: "Using calculator for 2+2 / Doing math in your head / Using fingers under the desk / Counting in another language to confuse yourself"
+CREATIVE POSSIBILITIES:
+- Original character interactions in unexpected settings
+- Creative object juxtapositions that tell a story
+- Unexpected visual metaphors brought to life
+- Photorealistic scenarios with humorous elements
+- Abstract concepts made tangible and funny
+- Modern art styles with perfect text integration
+- Split-screen comparisons using original imagery
+- Before/after scenarios with creative visuals
+- Anthropomorphized objects in relatable situations
+- Time-based progressions showing evolution/change
 
-Return ONLY the meme text in the specified format, no explanations or additional content.`;
+VISUAL CONCEPT EXAMPLES:
+- A robot trying to understand human emotions through a flowchart
+- Split screen: "My brain during the day" vs "My brain at 3 AM" with original imagery
+- Time traveler from 2030 casually using technology we can't imagine
+- Gravity working differently for different types of problems
+- A GPS that gives life directions instead of driving directions
+- Social media notifications as physical creatures demanding attention
 
-    const claudeResponse = await anthropic.messages.create({
+CRITICAL REQUIREMENTS:
+- Text must be SHORT, BOLD, and PERFECTLY READABLE
+- Visual concept must be ENTIRELY ORIGINAL
+- Should feel fresh and innovative, not recycled
+- Must be immediately shareable and quotable
+- Keep family-friendly but genuinely clever
+
+RESPONSE FORMAT:
+Return EXACTLY: "CONCEPT:[describe the original visual concept in detail]|TEXT:[short, punchy text that goes with the image]"
+
+Example: "CONCEPT:A person's motivation depicted as a battery percentage meter hovering above their head, starting at 100% in the morning and rapidly draining throughout the day|TEXT:Morning: 100% charged / After lunch: 23% remaining"`;
+
+const claudeResponse = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
-      max_tokens: 200,
+      max_tokens: 300,
       messages: [{
         role: 'user',
         content: enhancedPrompt
       }]
     });
 
-    const memeText = claudeResponse.content[0].text;
-    console.log('Claude response:', memeText);
+    const fullResponse = claudeResponse.content[0].text;
+    console.log('Claude full response:', fullResponse);
+    
+    // Parse the response to extract concept and text
+    const conceptMatch = fullResponse.match(/CONCEPT:([^|]+)\|TEXT:(.+)/);
+    
+    if (!conceptMatch) {
+      console.error('Failed to parse Claude response format');
+      throw new Error('Invalid response format from AI');
+    }
+    
+    const visualConcept = conceptMatch[1].trim();
+    const memeText = conceptMatch[2].trim();
+    
+    console.log('Original visual concept:', visualConcept);
+    console.log('Generated meme text:', memeText);
 
     // Generate image with GPT Image 1 - with retry logic for safety blocks
     console.log('=== GPT IMAGE 1 GENERATION START ===');
@@ -221,7 +238,7 @@ Return ONLY the meme text in the specified format, no explanations or additional
     console.log('API Key prefix:', openaiApiKey?.substring(0, 15) + '...');
     console.log('Request timestamp:', new Date().toISOString());
     console.log('Meme text for image:', memeText);
-    console.log('Template:', template);
+    console.log('Visual concept:', visualConcept);
     
     let imageResponse;
     let attempts = 0;
@@ -238,15 +255,15 @@ Return ONLY the meme text in the specified format, no explanations or additional
         promptText = sanitizeContent(memeText);
         console.log('🧹 Attempt 2: Using sanitized text:', promptText);
       } else if (attempts === 3) {
-        // Third attempt: use completely safe generic prompt
-        promptText = `Create a funny, relatable meme about everyday life situations that people find humorous and shareable`;
+        // Third attempt: use completely safe generic prompt with text fitting emphasis
+        promptText = `Create a short, funny meme about everyday life that fits clearly within image boundaries`;
         console.log('🛡️ Attempt 3: Using safe generic prompt');
       }
       
-      // Optimize GPT Image 1 parameters for best compatibility
+      // Create revolutionary original meme using the visual concept
       const imageRequest = {
         model: "gpt-image-1",
-        prompt: `Create a ${template} meme format with the text: "${promptText}". Make it viral-worthy with clear, readable text overlay. High quality meme style. Keep content family-friendly and non-controversial.`,
+        prompt: `Create an entirely original meme based on this visual concept: "${visualConcept}". Include the text: "${promptText}". CRITICAL REQUIREMENTS: 1) Create a completely ORIGINAL visual composition that has never been seen before, 2) Text must fit completely within image boundaries - NO TEXT CUTOFF, 3) Use large, bold, readable fonts with high contrast, 4) Ensure ALL text is fully visible and properly sized, 5) Make the visual concept come to life with creative, innovative imagery, 6) Avoid any traditional meme templates - this should be 100% original. Family-friendly viral meme style with professional quality.`,
         n: 1,
         size: "1024x1024", // Only supported size for GPT Image 1
         quality: "medium" // Balanced quality and speed for GPT Image 1
@@ -407,7 +424,7 @@ Return ONLY the meme text in the specified format, no explanations or additional
       body: JSON.stringify({
         text: memeText,
         image_url: finalImageUrl,
-        template,
+        visual_concept: visualConcept,
         created_at: new Date().toISOString()
       })
     };
