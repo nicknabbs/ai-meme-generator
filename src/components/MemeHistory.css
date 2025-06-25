@@ -1,0 +1,108 @@
+.meme-history {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.meme-history h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.history-empty h2 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.history-empty p {
+  color: #666;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-card h3 {
+  font-size: 2rem;
+  margin-bottom: 5px;
+  color: #6366f1;
+}
+
+.stat-card p {
+  color: #666;
+}
+
+.memes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.history-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.history-card:hover {
+  transform: translateY(-2px);
+  border-color: #6366f1;
+}
+
+.history-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.meme-info {
+  padding: 15px;
+}
+
+.meme-text {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.meme-date {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.meme-stats {
+  display: flex;
+  gap: 20px;
+  padding: 0 15px;
+  margin-bottom: 15px;
+}
+
+.meme-stats span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.download-btn {
+  width: calc(100% - 30px);
+  margin: 0 15px 15px;
+}

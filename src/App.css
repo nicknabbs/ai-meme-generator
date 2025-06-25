@@ -1,0 +1,137 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0a0a0a;
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+.App {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-header nav {
+  display: flex;
+  gap: 10px;
+}
+
+.app-header button {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 8px;
+}
+
+.app-header button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.app-header button.active {
+  color: #fff;
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.pricing-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  color: #fff !important;
+}
+
+.app-main {
+  min-height: calc(100vh - 200px);
+}
+
+/* Global Styles */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .app-header nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .app-header button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
