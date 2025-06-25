@@ -2,7 +2,10 @@ const OpenAI = require('openai');
 const Anthropic = require('@anthropic-ai/sdk');
 
 exports.handler = async function(event, context) {
+  console.log('=== FUNCTION START ===');
   console.log('Generate meme function called');
+  console.log('Event method:', event.httpMethod);
+  console.log('Event headers:', event.headers);
   
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
