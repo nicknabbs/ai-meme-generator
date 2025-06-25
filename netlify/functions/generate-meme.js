@@ -130,30 +130,56 @@ exports.handler = async function(event, context) {
       console.log('No data array found in response');
     }
     
-    // Try multiple extraction methods
+    // Enhanced URL extraction with comprehensive method coverage
     let imageUrl = null;
-    const extractionMethods = [
-      () => imageResponse.data?.[0]?.url,
-      () => imageResponse.data?.[0]?.image_url,
-      () => imageResponse.data?.[0]?.uri,
-      () => imageResponse.url,
-      () => imageResponse.image_url,
-      () => imageResponse.images?.[0]?.url,
-      () => imageResponse.data?.url,
-      () => imageResponse.data?.image_url
-    ];
     
-    for (let i = 0; i < extractionMethods.length; i++) {
-      try {
-        const url = extractionMethods[i]();
-        console.log(`Extraction method ${i + 1}:`, url || 'null/undefined');
-        if (url && typeof url === 'string' && url.startsWith('http')) {
-          imageUrl = url;
-          console.log(`✅ Found valid URL with method ${i + 1}:`, imageUrl);
-          break;
+    // Method 1: Standard DALL-E format (data[0].url) - highest priority
+    if (imageResponse.data?.[0]?.url && typeof imageResponse.data[0].url === 'string') {
+      imageUrl = imageResponse.data[0].url;
+      console.log('✅ Found URL using method 1: data[0].url -', imageUrl.substring(0, 100) + '...');
+    }
+    
+    // Method 2: Base64 format (data[0].b64_json) - convert to data URL
+    else if (imageResponse.data?.[0]?.b64_json && typeof imageResponse.data[0].b64_json === 'string') {
+      imageUrl = 'data:image/png;base64,' + imageResponse.data[0].b64_json;
+      console.log('✅ Found base64 using method 2: data[0].b64_json - converted to data URL');
+    }
+    
+    // Method 3: Images array format (images[0].url)
+    else if (imageResponse.images?.[0]?.url && typeof imageResponse.images[0].url === 'string') {
+      imageUrl = imageResponse.images[0].url;
+      console.log('✅ Found URL using method 3: images[0].url -', imageUrl.substring(0, 100) + '...');
+    }
+    
+    // Method 4: Images array base64 format (images[0].b64_json)
+    else if (imageResponse.images?.[0]?.b64_json && typeof imageResponse.images[0].b64_json === 'string') {
+      imageUrl = 'data:image/png;base64,' + imageResponse.images[0].b64_json;
+      console.log('✅ Found base64 using method 4: images[0].b64_json - converted to data URL');
+    }
+    
+    // Method 5: Legacy extraction methods (for backward compatibility)
+    else {
+      const legacyMethods = [
+        { name: 'data[0].image_url', extract: () => imageResponse.data?.[0]?.image_url },
+        { name: 'data[0].uri', extract: () => imageResponse.data?.[0]?.uri },
+        { name: 'url', extract: () => imageResponse.url },
+        { name: 'image_url', extract: () => imageResponse.image_url },
+        { name: 'data.url', extract: () => imageResponse.data?.url },
+        { name: 'data.image_url', extract: () => imageResponse.data?.image_url }
+      ];
+      
+      for (let i = 0; i < legacyMethods.length; i++) {
+        try {
+          const url = legacyMethods[i].extract();
+          console.log(`Legacy method ${i + 1} (${legacyMethods[i].name}):`, url || 'null/undefined');
+          if (url && typeof url === 'string' && (url.startsWith('http') || url.startsWith('data:'))) {
+            imageUrl = url;
+            console.log(`✅ Found valid URL with legacy method ${i + 1}:`, legacyMethods[i].name);
+            break;
+          }
+        } catch (e) {
+          console.log(`Legacy method ${i + 1} (${legacyMethods[i].name}) failed:`, e.message);
         }
-      } catch (e) {
-        console.log(`Extraction method ${i + 1} failed:`, e.message);
       }
     }
     
@@ -161,13 +187,43 @@ exports.handler = async function(event, context) {
     
     if (!imageUrl) {
       console.error('=== URL EXTRACTION FAILED ===');
-      console.error('No valid image URL found in response');
+      console.error('No valid image URL or base64 data found in response');
+      console.error('Response structure analysis:');
+      console.error('- Response keys:', Object.keys(imageResponse));
+      console.error('- Has data array:', !!imageResponse.data);
+      console.error('- Data array length:', Array.isArray(imageResponse.data) ? imageResponse.data.length : 'Not an array');
+      console.error('- Has images array:', !!imageResponse.images);
+      console.error('- Images array length:', Array.isArray(imageResponse.images) ? imageResponse.images.length : 'Not an array');
+      
+      if (imageResponse.data?.[0]) {
+        console.error('- First data item keys:', Object.keys(imageResponse.data[0]));
+        console.error('- First data item:', JSON.stringify(imageResponse.data[0], null, 2));
+      }
+      
+      if (imageResponse.images?.[0]) {
+        console.error('- First images item keys:', Object.keys(imageResponse.images[0]));
+        console.error('- First images item:', JSON.stringify(imageResponse.images[0], null, 2));
+      }
+      
       console.error('This indicates either:');
       console.error('1. GPT Image 1 response format has changed');
       console.error('2. The response structure is different than expected');
       console.error('3. The image generation failed but returned 200 status');
-      throw new Error('Image generation succeeded but no URL returned');
+      console.error('4. The image is in a format we are not handling (e.g., different field names)');
+      throw new Error('Image generation succeeded but no URL or base64 data returned');
     }
+    
+    // Validate the extracted URL/data
+    const isValidUrl = imageUrl.startsWith('http');
+    const isValidDataUrl = imageUrl.startsWith('data:image/');
+    
+    if (!isValidUrl && !isValidDataUrl) {
+      console.error('=== INVALID IMAGE DATA ===');
+      console.error('Extracted value is not a valid URL or data URL:', imageUrl.substring(0, 100));
+      throw new Error('Extracted image data is not in a valid format');
+    }
+    
+    console.log('✅ Successfully extracted image data:', isValidUrl ? 'URL' : 'Base64 Data URL');
 
     // Add watermark for free users
     const finalImageUrl = !user_id ? addWatermark(imageUrl) : imageUrl;
