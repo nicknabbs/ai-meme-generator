@@ -1,6 +1,77 @@
 const OpenAI = require('openai');
 const Anthropic = require('@anthropic-ai/sdk');
 
+// Content moderation system
+function sanitizeContent(text) {
+  if (!text) return text;
+  
+  // Political figures and sensitive terms to replace
+  const politicalReplacements = {
+    'trump': 'a politician',
+    'donald trump': 'a political figure',
+    'biden': 'a government official',
+    'joe biden': 'a political leader',
+    'harris': 'a government official',
+    'kamala harris': 'a political figure',
+    'powell': 'a fed official',
+    'jerome powell': 'a federal reserve official',
+    'fed rate': 'interest rate',
+    'federal reserve': 'central bank',
+    'democrat': 'political party member',
+    'republican': 'political party member',
+    'gop': 'political party',
+    'congress': 'legislative body',
+    'senate': 'legislative chamber',
+    'house of representatives': 'legislative chamber'
+  };
+  
+  let sanitized = text.toLowerCase();
+  
+  // Replace political terms
+  for (const [original, replacement] of Object.entries(politicalReplacements)) {
+    const regex = new RegExp(`\\b${original}\\b`, 'gi');
+    sanitized = sanitized.replace(regex, replacement);
+  }
+  
+  // Capitalize first letter of sentences
+  sanitized = sanitized.replace(/(^\w|\.\s*\w)/gm, (match) => match.toUpperCase());
+  
+  return sanitized;
+}
+
+function detectSensitiveContent(text) {
+  if (!text) return false;
+  
+  const sensitiveKeywords = [
+    'trump', 'biden', 'harris', 'political', 'election', 'vote', 'democrat', 'republican',
+    'gop', 'congress', 'senate', 'war', 'violence', 'terrorism', 'nazi', 'hitler',
+    'racism', 'sexism', 'discrimination', 'hate', 'suicide', 'murder', 'death',
+    'drugs', 'illegal', 'criminal', 'controversy', 'scandal'
+  ];
+  
+  const lowerText = text.toLowerCase();
+  return sensitiveKeywords.some(keyword => lowerText.includes(keyword));
+}
+
+function createSafePrompt(originalText, template) {
+  // If content is sensitive, create a completely generic alternative
+  const safeTopics = [
+    'everyday life struggles',
+    'work from home experiences', 
+    'social media habits',
+    'food and cooking',
+    'entertainment and movies',
+    'technology and gadgets',
+    'weather and seasons',
+    'exercise and fitness',
+    'pets and animals',
+    'travel and vacation'
+  ];
+  
+  const randomTopic = safeTopics[Math.floor(Math.random() * safeTopics.length)];
+  return `Create a relatable meme about ${randomTopic} that people will find funny and shareable`;
+}
+
 exports.handler = async function(event, context) {
   console.log('=== FUNCTION START ===');
   console.log('Generate meme function called');
@@ -52,6 +123,11 @@ exports.handler = async function(event, context) {
     const { text, template, user_id } = JSON.parse(event.body);
     console.log('Request params:', { text, template, user_id });
 
+    // Content moderation check
+    const inputText = text || '';
+    const isSensitive = detectSensitiveContent(inputText);
+    console.log('Content sensitivity check:', { isSensitive, originalLength: inputText.length });
+
     // Fetch fresh trending data for context
     console.log('🔍 Fetching fresh trending data for meme context...');
     let trendingContext = '';
@@ -84,12 +160,22 @@ exports.handler = async function(event, context) {
 
     const currentTemplate = templateInstructions[template] || 'Create funny meme text appropriate for the format.';
 
+    // Determine the topic to use for meme generation
+    let memeInputText = text || 'Use trending topics as inspiration';
+    
+    // If sensitive content detected, sanitize or create safe alternative
+    if (isSensitive) {
+      console.log('⚠️ Sensitive content detected, sanitizing...');
+      memeInputText = sanitizeContent(inputText) || createSafePrompt(inputText, template);
+      console.log('✅ Content sanitized:', memeInputText.substring(0, 100) + '...');
+    }
+
     const enhancedPrompt = `You are an expert meme creator who understands viral internet humor. Create a hilarious, relatable meme for the ${template} format.
 
 MEME FORMAT INSTRUCTIONS:
 ${currentTemplate}
 
-USER TOPIC: ${text || 'Use trending topics as inspiration'}
+USER TOPIC: ${memeInputText}
 ${trendingContext}
 
 VIRAL MEME CHARACTERISTICS TO INCLUDE:
@@ -106,8 +192,9 @@ QUALITY GUIDELINES:
 - Use contemporary references people will understand
 - Include subtle humor that rewards careful reading
 - Make it shareable and quotable
-- Avoid offensive or controversial content
+- Avoid ALL political figures, controversial topics, and sensitive content
 - Use conversational, meme-appropriate language
+- Keep content family-friendly and non-offensive
 
 SUCCESSFUL MEME EXAMPLES:
 - Drake: "Studying for finals / Watching Netflix documentaries about serial killers"
@@ -128,7 +215,7 @@ Return ONLY the meme text in the specified format, no explanations or additional
     const memeText = claudeResponse.content[0].text;
     console.log('Claude response:', memeText);
 
-    // Generate image with GPT Image 1
+    // Generate image with GPT Image 1 - with retry logic for safety blocks
     console.log('=== GPT IMAGE 1 GENERATION START ===');
     console.log('Organization ID:', 'org-2EYm2mphT2Yn21zw5J1DtVJq');
     console.log('API Key prefix:', openaiApiKey?.substring(0, 15) + '...');
@@ -136,39 +223,63 @@ Return ONLY the meme text in the specified format, no explanations or additional
     console.log('Meme text for image:', memeText);
     console.log('Template:', template);
     
-    // Optimize GPT Image 1 parameters for best compatibility
-    const imageRequest = {
-      model: "gpt-image-1",
-      prompt: `Create a ${template} meme format with the text: "${memeText}". Make it viral-worthy with clear, readable text overlay. High quality meme style.`,
-      n: 1,
-      size: "1024x1024", // Only supported size for GPT Image 1
-      quality: "medium" // Balanced quality and speed for GPT Image 1
-    };
-    
-    console.log('Image generation request:', JSON.stringify(imageRequest, null, 2));
-    console.log('Starting GPT Image 1 generation...');
-    
     let imageResponse;
-    try {
-      imageResponse = await openai.images.generate(imageRequest);
-      console.log('GPT Image 1 generation completed successfully');
-    } catch (imageError) {
-      console.error('=== GPT IMAGE 1 ERROR DETAILS ===');
-      console.error('Error type:', typeof imageError);
-      console.error('Error constructor:', imageError.constructor.name);
-      console.error('Error message:', imageError.message);
-      console.error('Error status:', imageError.status);
-      console.error('Error code:', imageError.code);
-      console.error('Error type property:', imageError.type);
-      console.error('Full error object:', JSON.stringify(imageError, null, 2));
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      console.log(`🔄 Attempt ${attempts}/${maxAttempts} for image generation...`);
       
-      if (imageError.response) {
-        console.error('Response status:', imageError.response.status);
-        console.error('Response headers:', imageError.response.headers);
-        console.error('Response data:', imageError.response.data);
+      // Progressive sanitization for each attempt
+      let promptText = memeText;
+      if (attempts === 2) {
+        // Second attempt: further sanitize the text
+        promptText = sanitizeContent(memeText);
+        console.log('🧹 Attempt 2: Using sanitized text:', promptText);
+      } else if (attempts === 3) {
+        // Third attempt: use completely safe generic prompt
+        promptText = `Create a funny, relatable meme about everyday life situations that people find humorous and shareable`;
+        console.log('🛡️ Attempt 3: Using safe generic prompt');
       }
       
-      throw imageError; // Re-throw to be caught by outer catch
+      // Optimize GPT Image 1 parameters for best compatibility
+      const imageRequest = {
+        model: "gpt-image-1",
+        prompt: `Create a ${template} meme format with the text: "${promptText}". Make it viral-worthy with clear, readable text overlay. High quality meme style. Keep content family-friendly and non-controversial.`,
+        n: 1,
+        size: "1024x1024", // Only supported size for GPT Image 1
+        quality: "medium" // Balanced quality and speed for GPT Image 1
+      };
+      
+      console.log('Image generation request:', JSON.stringify(imageRequest, null, 2));
+      console.log('Starting GPT Image 1 generation...');
+      
+      try {
+        imageResponse = await openai.images.generate(imageRequest);
+        console.log('✅ GPT Image 1 generation completed successfully on attempt', attempts);
+        break; // Success, exit retry loop
+        
+      } catch (imageError) {
+        console.error(`❌ GPT Image 1 error on attempt ${attempts}:`, imageError.message);
+        console.error('Error code:', imageError.code);
+        console.error('Error type:', imageError.type);
+        
+        // Check if it's a moderation block
+        if (imageError.code === 'moderation_blocked' || imageError.status === 400) {
+          console.log('🚫 Content moderation block detected, trying with safer content...');
+          
+          if (attempts === maxAttempts) {
+            console.error('❌ All attempts failed due to content moderation');
+            throw new Error('Unable to generate image - content may be too sensitive. Please try a different topic.');
+          }
+          // Continue to next attempt with safer content
+        } else {
+          // For non-moderation errors, throw immediately
+          console.error('Non-moderation error, not retrying:', imageError);
+          throw imageError;
+        }
+      }
     }
 
     console.log('=== GPT IMAGE 1 RESPONSE ANALYSIS ===');
@@ -391,6 +502,26 @@ Return ONLY the meme text in the specified format, no explanations or additional
       };
     }
     
+    // Handle content moderation errors with helpful messaging
+    if (error.message?.includes('content may be too sensitive')) {
+      console.error('Content moderation error detected');
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ 
+          error: 'Content moderation block',
+          details: 'Content contains sensitive topics',
+          userMessage: 'This topic contains sensitive content that cannot be used for meme generation. Please try a different, more general topic like technology, food, or everyday life situations.',
+          suggestions: [
+            'Try topics about everyday life struggles',
+            'Make memes about technology or social media',
+            'Create content about food, pets, or entertainment',
+            'Focus on relatable work or school experiences'
+          ],
+          timestamp: new Date().toISOString()
+        })
+      };
+    }
+
     // Handle Claude API errors specifically
     if (error.message?.includes('Claude') || error.message?.includes('Anthropic')) {
       console.error('Claude API error detected');

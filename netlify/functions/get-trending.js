@@ -58,7 +58,7 @@ exports.handler = async function(event, context) {
             headers: {
               'Authorization': `Basic ${authString}`,
               'Content-Type': 'application/x-www-form-urlencoded',
-              'User-Agent': 'AI-Meme-Generator/1.0.0'
+              'User-Agent': 'web:ai-meme-generator:v1.0.0 (by /u/AI-Meme-Bot)'
             }
           }
         );
@@ -74,7 +74,7 @@ exports.handler = async function(event, context) {
             const response = await axios.get(`https://oauth.reddit.com/r/${subreddit}/hot`, {
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
-                'User-Agent': 'AI-Meme-Generator/1.0.0'
+                'User-Agent': 'web:ai-meme-generator:v1.0.0 (by /u/AI-Meme-Bot)'
               },
               params: {
                 limit: 5 // Get top 5 hot posts from each subreddit

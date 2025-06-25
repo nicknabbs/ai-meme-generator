@@ -87,7 +87,20 @@ function MemeGenerator({ user }) {
 
       toast.success('Meme generated successfully!');
     } catch (error) {
-      toast.error('Failed to generate meme. Please try again.');
+      console.error('Meme generation error:', error);
+      
+      // Check if it's a content moderation error with suggestions
+      if (error.response?.data?.suggestions) {
+        const suggestions = error.response.data.suggestions.join('\n• ');
+        toast.error(
+          `${error.response.data.userMessage}\n\nSuggestions:\n• ${suggestions}`,
+          { duration: 8000 }
+        );
+      } else if (error.response?.data?.userMessage) {
+        toast.error(error.response.data.userMessage, { duration: 6000 });
+      } else {
+        toast.error('Failed to generate meme. Please try again.');
+      }
     } finally {
       setLoading(false);
       setFetchingTrends(false);
