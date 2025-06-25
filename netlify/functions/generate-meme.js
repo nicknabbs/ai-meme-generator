@@ -1,15 +1,15 @@
-import { Configuration, OpenAIApi } from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
+const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 
 const anthropic = new Anthropic({
-  apiKey: process.env.REACT_APP_CLAUDE_API_KEY || 'placeholder',
+  apiKey: process.env.REACT_APP_CLAUDE_API_KEY,
 });
 
-const openai = new OpenAIApi(new Configuration({
-  apiKey: process.env.REACT_APP_OPENAI_API_KEY || 'placeholder',
-}));
+const openai = new OpenAI({
+  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
+});
 
-export async function handler(event, context) {
+exports.handler = async function(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -29,15 +29,15 @@ export async function handler(event, context) {
 
     const memeText = claudeResponse.content[0].text;
 
-    // Generate image with the specified model
-    const imageResponse = await openai.createImage({
-      model: "gpt-image-1",
+    // Generate image with DALL-E
+    const imageResponse = await openai.images.generate({
+      model: "dall-e-3",
       prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style.`,
       n: 1,
       size: "1024x1024",
     });
 
-    const imageUrl = imageResponse.data.data[0].url;
+    const imageUrl = imageResponse.data[0].url;
 
     // Add watermark for free users
     const finalImageUrl = !user_id ? addWatermark(imageUrl) : imageUrl;
@@ -64,4 +64,4 @@ function addWatermark(imageUrl) {
   // In production, you'd process the image to add a watermark
   // For now, return the original URL
   return imageUrl;
-}
+};

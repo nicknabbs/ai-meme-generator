@@ -1,4 +1,4 @@
-export async function handler(event, context) {
+exports.handler = async function(event, context) {
   // In production, this would fetch from Twitter, Reddit, TikTok APIs
   // For demo, return mock trending topics
   
@@ -51,4 +51,4 @@ export async function handler(event, context) {
     statusCode: 200,
     body: JSON.stringify({ topics: mockTopics })
   };
-}
+};
