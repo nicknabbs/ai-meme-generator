@@ -80,7 +80,7 @@ exports.handler = async function(event, context) {
       prompt: `Create a ${template} meme format with the text: "${memeText}". Make it viral-worthy with clear, readable text overlay. High quality meme style.`,
       n: 1,
       size: "1024x1024", // Only supported size for GPT Image 1
-      quality: "standard" // Use standard quality instead of low for better results
+      quality: "medium" // Balanced quality and speed for GPT Image 1
     };
     
     console.log('Image generation request:', JSON.stringify(imageRequest, null, 2));
