@@ -1,23 +1,54 @@
 const OpenAI = require('openai');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const anthropic = new Anthropic({
-  apiKey: process.env.REACT_APP_CLAUDE_API_KEY,
-});
-
-const openai = new OpenAI({
-  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
-});
-
 exports.handler = async function(event, context) {
+  console.log('Generate meme function called');
+  
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
+  // Validate environment variables
+  const claudeApiKey = process.env.REACT_APP_CLAUDE_API_KEY;
+  const openaiApiKey = process.env.REACT_APP_OPENAI_API_KEY;
+  
+  console.log('Environment check:', {
+    hasClaude: !!claudeApiKey,
+    hasOpenAI: !!openaiApiKey,
+    claudeKeyPrefix: claudeApiKey ? claudeApiKey.substring(0, 10) + '...' : 'missing',
+    openaiKeyPrefix: openaiApiKey ? openaiApiKey.substring(0, 10) + '...' : 'missing'
+  });
+
+  if (!claudeApiKey) {
+    console.error('Missing REACT_APP_CLAUDE_API_KEY');
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Missing Claude API key configuration' })
+    };
+  }
+
+  if (!openaiApiKey) {
+    console.error('Missing REACT_APP_OPENAI_API_KEY');
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Missing OpenAI API key configuration' })
+    };
+  }
+
+  const anthropic = new Anthropic({
+    apiKey: claudeApiKey,
+  });
+
+  const openai = new OpenAI({
+    apiKey: openaiApiKey,
+  });
+
   try {
     const { text, template, user_id } = JSON.parse(event.body);
+    console.log('Request params:', { text, template, user_id });
 
     // Generate meme text with Claude
+    console.log('Calling Claude API...');
     const claudeResponse = await anthropic.messages.create({
       model: 'claude-3-sonnet-20240229',
       max_tokens: 150,
@@ -28,8 +59,10 @@ exports.handler = async function(event, context) {
     });
 
     const memeText = claudeResponse.content[0].text;
+    console.log('Claude response:', memeText);
 
     // Generate image with DALL-E
+    console.log('Calling OpenAI API...');
     const imageResponse = await openai.images.generate({
       model: "dall-e-3",
       prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style.`,
@@ -38,10 +71,12 @@ exports.handler = async function(event, context) {
     });
 
     const imageUrl = imageResponse.data[0].url;
+    console.log('OpenAI image generated:', imageUrl);
 
     // Add watermark for free users
     const finalImageUrl = !user_id ? addWatermark(imageUrl) : imageUrl;
 
+    console.log('Meme generation successful');
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -53,9 +88,18 @@ exports.handler = async function(event, context) {
     };
   } catch (error) {
     console.error('Error generating meme:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to generate meme' })
+      body: JSON.stringify({ 
+        error: 'Failed to generate meme',
+        details: error.message
+      })
     };
   }
 }
