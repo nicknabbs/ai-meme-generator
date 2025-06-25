@@ -78,8 +78,21 @@ exports.handler = async function(event, context) {
       quality: "low", // Use low quality for fastest processing
     });
 
-    const imageUrl = imageResponse.data[0].url;
-    console.log('OpenAI image generated:', imageUrl);
+    console.log('Full GPT Image 1 response:', JSON.stringify(imageResponse, null, 2));
+    console.log('Response keys:', Object.keys(imageResponse));
+    
+    // Try different possible URL locations
+    let imageUrl = imageResponse.data?.[0]?.url || 
+                   imageResponse.url || 
+                   imageResponse.images?.[0]?.url ||
+                   imageResponse.data?.url;
+    
+    console.log('Extracted image URL:', imageUrl);
+    
+    if (!imageUrl) {
+      console.error('No image URL found in response');
+      throw new Error('Image generation succeeded but no URL returned');
+    }
 
     // Add watermark for free users
     const finalImageUrl = !user_id ? addWatermark(imageUrl) : imageUrl;
