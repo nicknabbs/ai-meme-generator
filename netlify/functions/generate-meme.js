@@ -61,11 +61,11 @@ exports.handler = async function(event, context) {
     const memeText = claudeResponse.content[0].text;
     console.log('Claude response:', memeText);
 
-    // Generate image with DALL-E
+    // Generate image with GPT Image 1
     console.log('Calling OpenAI API...');
     const imageResponse = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style.`,
+      model: "gpt-image-1",
+      prompt: `A ${template} meme with the text: "${memeText}". High quality, viral meme style with clear, readable text.`,
       n: 1,
       size: "1024x1024",
     });
