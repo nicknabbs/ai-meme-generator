@@ -281,7 +281,7 @@ const claudeResponse = await anthropic.messages.create({
       }
       const imageRequest = {
         model: "gpt-image-1",
-        prompt: `Create a meme: ${safeVisualConcept}. Add meme text at the top and bottom: "${promptText}". Use large, bold, white text with black outline. Keep text short and readable.`,
+        prompt: `Create a professional meme image: ${safeVisualConcept}. Add meme text "${promptText}" positioned properly: TOP text in the upper 15% of image, BOTTOM text in the lower 15% of image. Use LARGE, BOLD, white text with thick black outline for maximum readability. Center text horizontally. Ensure text has proper margins from image edges (10% padding). Make text size proportional to image - large enough to read clearly. Use Impact or similar bold font. Text must be clearly visible against any background.`,
         n: 1,
         size: "1024x1024",
         quality: "medium",

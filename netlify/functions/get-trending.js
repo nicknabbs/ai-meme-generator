@@ -58,10 +58,10 @@ exports.handler = async function(event, context) {
       money: ['investing', 'cryptocurrency', 'personalfinance', 'stocks']
     };
 
-    // Get environment variables
-    const redditClientId = process.env.REACT_APP_REDDIT_CLIENT_ID;
-    const redditClientSecret = process.env.REACT_APP_REDDIT_CLIENT_SECRET;
-    const newsApiKey = process.env.REACT_APP_NEWSAPI_KEY;
+    // Get environment variables (Netlify functions don't use REACT_APP_ prefix)
+    const redditClientId = process.env.REDDIT_CLIENT_ID;
+    const redditClientSecret = process.env.REDDIT_CLIENT_SECRET;
+    const newsApiKey = process.env.NEWSAPI_KEY;
 
     console.log('Environment check:', {
       hasRedditId: !!redditClientId,
