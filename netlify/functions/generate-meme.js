@@ -279,9 +279,19 @@ const claudeResponse = await anthropic.messages.create({
       } else {
         safeVisualConcept = fallbackVisual;
       }
+      // Progressive simplification based on attempt number
+      let promptApproach;
+      if (attempts === 1) {
+        promptApproach = `Create a meme image: ${safeVisualConcept}. Add the text "${promptText}" at the bottom of the image with large, bold, white text and black outline. Make sure text is fully visible and readable.`;
+      } else if (attempts === 2) {
+        promptApproach = `Create a meme: ${safeVisualConcept}. Add text "${promptText}" in large, clear, white letters with black border. Position text so it's completely visible.`;
+      } else {
+        promptApproach = `Simple meme image: ${safeVisualConcept}. Text: "${promptText}". Make text large and visible.`;
+      }
+      
       const imageRequest = {
         model: "gpt-image-1",
-        prompt: `Create a professional meme image: ${safeVisualConcept}. Add meme text "${promptText}" positioned properly: TOP text in the upper 15% of image, BOTTOM text in the lower 15% of image. Use LARGE, BOLD, white text with thick black outline for maximum readability. Center text horizontally. Ensure text has proper margins from image edges (10% padding). Make text size proportional to image - large enough to read clearly. Use Impact or similar bold font. Text must be clearly visible against any background.`,
+        prompt: promptApproach,
         n: 1,
         size: "1024x1024",
         quality: "medium",
